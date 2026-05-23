@@ -1,12 +1,14 @@
 import streamlit as st
 import tensorflow as tf
+import os
+import requests
 
-# تحميل الموديل من نفس المجلد
 @st.cache_resource
 def load_models():
-    # طالما الملفات مرفوعة في نفس فولدر الكود، المسار بيكون اسم الملف بس
-    model1 = tf.keras.models.load_model("health_model.keras", compile=False)
-    model2 = tf.keras.models.load_model("plant_model.keras", compile=False)
+    # روابط الموديلات (إذا كانت عندك على Google Drive، ضع الروابط هنا)
+    # إذا لم تكن متوفرة، سأعطيك حلاً آخر فوراً
+    model1 = tf.keras.models.load_model("https://github.com/Ahme-cmyk/TRI-SCIENCE-AI/raw/main/health_model.keras", compile=False)
+    model2 = tf.keras.models.load_model("https://github.com/Ahme-cmyk/TRI-SCIENCE-AI/raw/main/plant_model.keras", compile=False)
     return model1, model2
 
-model1, model2 = load_models()
+# ... باقي كود التطبيق الخاص بك
