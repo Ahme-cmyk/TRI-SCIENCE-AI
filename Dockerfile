@@ -1,26 +1,43 @@
-FROM python:3.13.5-slim
+import streamlit as st
+import tensorflow as tf
+import requests
+import os
 
-WORKDIR /app
+# إعداد الصفحة
+st.set_page_config(page_title="تشخيص النباتات", layout="centered")
+st.title("🌱 تطبيق تشخيص أمراض النباتات")
 
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    curl \
-    git \
-    && rm -rf /var/lib/apt/lists/*
+# الروابط المباشرة للموديلات
+MODEL_URLS = {
+    "health_model.keras": "https://huggingface.co/spaces/ahmedhosny2052005/TRI-SCIENCE-AI/resolve/main/health_model.keras?download=true",
+    "plant_model.keras": "https://huggingface.co/spaces/ahmedhosny2052005/TRI-SCIENCE-AI/resolve/main/plant_model.keras?download=true"
+}
 
-COPY requirements.txt ./
+# دالة تحميل الموديلات
+@st.cache_resource
+def load_models():
+    for filename, url in MODEL_URLS.items():
+        if not os.path.exists(filename):
+            with st.spinner(f"جاري تحميل {filename}..."):
+                response = requests.get(url)
+                with open(filename, 'wb') as f:
+                    f.write(response.content)
+    
+    model1 = tf.keras.models.load_model("health_model.keras")
+    model2 = tf.keras.models.load_model("plant_model.keras")
+    return model1, model2
 
-RUN pip3 install --no-cache-dir --upgrade pip && \
-    pip3 install --no-cache-dir -r requirements.txt
+# تشغيل التحميل
+try:
+    model1, model2 = load_models()
+    st.success("الموديلات جاهزة للعمل!")
+except Exception as e:
+    st.error(f"خطأ في تحميل الموديل: {e}")
 
-# نسخ الملفات
-COPY . .
+# واجهة رفع الصورة
+uploaded_file = st.file_uploader("ارفع صورة نبات هنا...", type=["jpg", "png", "jpeg"])
 
-EXPOSE 7860
-
-# أمر الفحص السحري اللي هيخلي السيرفر يلقط الإشارة فوراً على البورت 7860
-HEALTHCHECK --interval=30s --timeout=15s --start-period=60s --retries=3 \
-    CMD curl --fail http://localhost:7860/_stcore/health || exit 1
-
-# تشغيل الملف بالاسم والمسار الصحيحين
-CMD ["python3", "-m", "streamlit", "run", "src/streamlit_app.py", "--server.port", "7860", "--server.address", "0.0.0.0"]
+if uploaded_file is not None:
+    st.image(uploaded_file, caption="الصورة المرفوعة", use_column_width=True)
+    st.write("جاري المعالجة...")
+    # هنا تحط كود التوقع بتاعك (Prediction)
