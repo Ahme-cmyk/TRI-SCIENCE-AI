@@ -1,28 +1,23 @@
 import streamlit as st
 import tensorflow as tf
-import requests
-import os
-
-# دالة التحميل المباشر
-def download_file(file_id, filename):
-    url = f"https://drive.google.com/uc?export=download&id={file_id}"
-    if not os.path.exists(filename):
-        response = requests.get(url)
-        with open(filename, 'wb') as f:
-            f.write(response.content)
+from huggingface_hub import hf_hub_download
 
 @st.cache_resource
 def load_models():
-    # معرفات الملفات (اللي بعد /d/ وقبل /view)
-    id1 = "1FhkJtdD8XHpKy9vFQGCrJpvsHsCs3O73"
-    id2 = "1MY9O2VcEDeQm7M_jv1_88st17rAxECtR"
+    # هذا الكود سيقوم بتحميل الموديلات من مستودعك على Hugging Face
+    # تأكد فقط أن المستودع العام (Public)
+    model1_path = hf_hub_download(repo_id="ahmedhosny2052005/TRI-SCIENCE-AI", filename="health_model.keras")
+    model2_path = hf_hub_download(repo_id="ahmedhosny2052005/TRI-SCIENCE-AI", filename="plant_model.keras")
     
-    download_file(id1, "health_model.keras")
-    download_file(id2, "plant_model.keras")
-    
-    model1 = tf.keras.models.load_model("health_model.keras", compile=False)
-    model2 = tf.keras.models.load_model("plant_model.keras", compile=False)
+    # تحميل الموديلات
+    model1 = tf.keras.models.load_model(model1_path, compile=False)
+    model2 = tf.keras.models.load_model(model2_path, compile=False)
     return model1, model2
 
-model1, model2 = load_models()
-# كمل باقي الكود بتاعك من هنا...
+# استدعاء الموديلات
+try:
+    model1, model2 = load_models()
+    st.success("تم تحميل الموديلات بنجاح!")
+except Exception as e:
+    st.error(f"حدث خطأ أثناء تحميل الموديلات: {e}")
+    st.write("تأكد أن المستودع على Hugging Face عام (Public) وأن أسماء الملفات صحيحة.")
