@@ -3,30 +3,41 @@ import tensorflow as tf
 import requests
 import os
 
-# روابط الموديلات اللي إنت بعتها
-model_urls = {
+# إعداد الصفحة
+st.set_page_config(page_title="تشخيص النباتات", layout="centered")
+st.title("🌱 تطبيق تشخيص أمراض النباتات")
+
+# الروابط المباشرة للموديلات
+MODEL_URLS = {
     "health_model.keras": "https://huggingface.co/spaces/ahmedhosny2052005/TRI-SCIENCE-AI/resolve/main/health_model.keras?download=true",
     "plant_model.keras": "https://huggingface.co/spaces/ahmedhosny2052005/TRI-SCIENCE-AI/resolve/main/plant_model.keras?download=true"
 }
 
-# دالة لتحميل الموديلات إذا لم تكن موجودة
+# دالة تحميل الموديلات
 @st.cache_resource
 def load_models():
-    for filename, url in model_urls.items():
+    for filename, url in MODEL_URLS.items():
         if not os.path.exists(filename):
-            st.write(f"جاري تحميل {filename}... استنى لحظة.")
-            r = requests.get(url, allow_redirects=True)
-            with open(filename, 'wb') as f:
-                f.write(r.content)
+            with st.spinner(f"جاري تحميل {filename}..."):
+                response = requests.get(url)
+                with open(filename, 'wb') as f:
+                    f.write(response.content)
     
-    # تحميل الموديلات في الرامات
     model1 = tf.keras.models.load_model("health_model.keras")
     model2 = tf.keras.models.load_model("plant_model.keras")
     return model1, model2
 
 # تشغيل التحميل
-st.title("تطبيق تشخيص النباتات الذكي")
-model1, model2 = load_models()
-st.success("تم تحميل الموديلات بنجاح! الموقع جاهز للاستخدام.")
+try:
+    model1, model2 = load_models()
+    st.success("الموديلات جاهزة للعمل!")
+except Exception as e:
+    st.error(f"خطأ في تحميل الموديل: {e}")
 
-# هنا حط باقي كود الـ UI الخاص بيك (رفع الصورة، النتيجة، إلخ...)
+# واجهة رفع الصورة
+uploaded_file = st.file_uploader("ارفع صورة نبات هنا...", type=["jpg", "png", "jpeg"])
+
+if uploaded_file is not None:
+    st.image(uploaded_file, caption="الصورة المرفوعة", use_column_width=True)
+    st.write("جاري المعالجة...")
+    # هنا تحط كود التوقع بتاعك (Prediction)
